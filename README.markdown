@@ -21,14 +21,14 @@ You can find an example database at
 Installing/Configuring
 ======================
 
-To install phpRedisAdmin through [composer](http://getcomposer.org/) you need to execute the following commands:
+To install [phpRedisAdmin](https://packagist.org/packages/erik-dubbelboer/php-redis-admin) through [composer](http://getcomposer.org/) you need to execute the following commands:
 
 ```
 curl -s http://getcomposer.org/installer | php
 php composer.phar create-project -s dev erik-dubbelboer/php-redis-admin path/to/install
 ```
 
-You may also want to copy includes/config.simple.inc.php to includes/config.inc.php
+You may also want to copy includes/config.sample.inc.php to includes/config.inc.php
 and edit it with your specific redis configuration.
 
 Instead of using composer, you can also do a manual install using:
@@ -38,6 +38,28 @@ git clone https://github.com/ErikDubbelboer/phpRedisAdmin.git
 cd phpRedisAdmin
 git clone https://github.com/nrk/predis.git vendor
 ```
+
+Docker Image
+============
+A public [phpRedisAdmin Docker image](https://hub.docker.com/r/erikdubbelboer/phpredisadmin/) is available on Docker Hub built from the latest tag.
+The file ```includes/config.environment.inc.php``` is used as the configuration file to allow environment variables to be used as configuration values.
+Example:
+```
+docker run --rm -it -e REDIS_1_HOST=myredis.host -e REDIS_1_NAME=MyRedis -p 80:80 erikdubbelboer/phpredisadmin
+```
+Also, a Docker Compose manifest with a stack for testing and development is provided. Just issue ```docker-compose up --build``` to start it and browse to http://localhost. See ```docker-compose.yml``` file for configuration details.
+
+Environment variables summary
+====
+
+* ``REDIS_1_HOST`` - define host of the Redis server
+* ``REDIS_1_NAME`` - define name of the Redis server
+* ``REDIS_1_PORT`` - define port of the Redis server
+* ``REDIS_1_AUTH`` - define password of the Redis server
+* ``REDIS_1_AUTH_FILE`` - define file containing the password of the Redis server
+* ``REDIS_1_DATABASES`` - You can modify you config to prevent phpRedisAdmin from using CONFIG command 
+* ``ADMIN_USER`` - define username for user-facing Basic Auth
+* ``ADMIN_PASS`` - define password for user-facing Basic Auth
 
 TODO
 ====

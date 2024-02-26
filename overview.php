@@ -1,9 +1,7 @@
 <?php
 
 require_once 'includes/common.inc.php';
-
-
-
+global $redis, $config, $csrfToken, $server;
 
 $info = array();
 
@@ -13,7 +11,11 @@ foreach ($config['servers'] as $i => $server) {
   }
 
   // Setup a connection to Redis.
-  $redis = !$server['port'] ? new Predis\Client($server['host']) : new Predis\Client('tcp://'.$server['host'].':'.$server['port']);
+  if(isset($server['scheme']) && $server['scheme'] === 'unix' && $server['path']) {
+    $redis = new Predis\Client(array('scheme' => 'unix', 'path' => $server['path']));
+  } else {
+    $redis = !$server['port'] ? new Predis\Client($server['host']) : new Predis\Client('tcp://'.$server['host'].':'.$server['port']);
+  }
   try {
     $redis->connect();
   } catch (Predis\CommunicationException $exception) {
@@ -79,9 +81,21 @@ require 'includes/header.inc.php';
 
   <tr><td><div>Memory used:</div></td><td><div><?php echo format_size($info[$i]['Memory']['used_memory'])?></div></td></tr>
 
-  <tr><td><div>Uptime:</div></td><td><div><?php echo format_ago($info[$i]['Server']['uptime_in_seconds'])?></div></td></tr>
+  <tr><td><div>Uptime:</div></td><td><div><?php echo format_time($info[$i]['Server']['uptime_in_seconds'])?></div></td></tr>
 
-  <tr><td><div>Last save:</div></td><td><div><?php if (isset($info[$i]['Persistence']['rdb_last_save_time'])) { echo format_ago(time() - $info[$i]['Persistence']['rdb_last_save_time'], true); } else { echo 'never'; } ?> <a href="save.php?s=<?php echo $i?>"><img src="images/save.png" width="16" height="16" title="Save Now" alt="[S]" class="imgbut"></a></div></td></tr>
+  <tr><td><div>Last save:</div></td><td><div>
+    <?php 
+        if (isset($info[$i]['Persistence']['rdb_last_save_time'])) {
+           if((time() - $info[$i]['Persistence']['rdb_last_save_time'] ) >= 0) {
+              echo format_time(time() - $info[$i]['Persistence']['rdb_last_save_time']) . " ago";
+           } else { 
+              echo format_time(-(time() - $info[$i]['Persistence']['rdb_last_save_time'])) . "in the future"; 
+           } 
+        } else { 
+           echo 'never';
+        } 
+    ?> 
+    <a href="save.php?s=<?php echo $i?>"><img src="images/save.png" width="16" height="16" title="Save Now" alt="[S]" class="imgbut"></a></div></td></tr>
 
   </table>
   <?php endif; ?>
@@ -93,7 +107,7 @@ require 'includes/header.inc.php';
 </p>
 
 <p>
-<a href="http://redis.io/documentation" target="_blank">Redis Documentation</a>
+<a href="https://redis.io/documentation" target="_blank">Redis Documentation</a>
 </p>
 <?php
 

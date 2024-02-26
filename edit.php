@@ -2,8 +2,7 @@
 
 require_once 'includes/common.inc.php';
 
-
-
+global $redis, $config, $csrfToken, $server;
 
 // Are we editing or creating a new key?
 $edit = false;
@@ -58,8 +57,7 @@ if (isset($_POST['type'], $_POST['key'], $_POST['value'])) {
     $size = $redis->lLen($key);
 
     if (($_POST['index'] == '') ||
-        ($_POST['index'] == $size) ||
-        ($_POST['index'] == -1)) {
+        ($_POST['index'] == $size)) {
       // Push it at the end
       $redis->rPush($key, $value);
     } else if (($_POST['index'] >= 0) &&
@@ -142,7 +140,8 @@ require 'includes/header.inc.php';
 
 ?>
 <h2><?php echo $edit ? 'Edit' : 'Add'?></h2>
-<form action="<?php echo format_html($_SERVER['REQUEST_URI'])?>" method="post">
+<form action="<?php echo format_html(getRelativePath('edit.php'))?>" method="post">
+<input type="hidden" name="csrf" value="<?php echo $csrfToken; ?>" />
 
 <p>
 <label for="type">Type:</label>
@@ -182,9 +181,7 @@ require 'includes/header.inc.php';
 
 <input type="hidden" name="oldvalue" value="<?php echo format_html($value)?>">
 
-<p>
 <input type="submit" class="button" value="<?php echo $edit ? 'Edit' : 'Add'?>">
-</p>
 
 </form>
 <?php

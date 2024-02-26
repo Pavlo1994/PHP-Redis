@@ -8,6 +8,9 @@ $config = array(
       'host'   => '127.0.0.1',
       'port'   => 6379,
       'filter' => '*',
+      'scheme' => 'tcp', // Optional. Connection scheme. 'tcp' - for TCP connection, 'unix' - for connection by unix domain socket
+      'path'   => '', // Optional. Path to unix domain socket. Uses only if 'scheme' => 'unix'. Example: '/var/run/redis/redis.sock'
+      'hide'   => false, // Optional. Override global setting. Hide empty databases in the database list.
 
       // Optional Redis authentication.
       //'auth' => 'redispasswordhere' // Warning: The password is sent in plain-text to the Redis server.
@@ -23,6 +26,7 @@ $config = array(
       'host'      => 'localhost',
       'port'      => 6379,
       'db'        => 1,             // Optional database number, see http://redis.io/commands/select
+      'databases' => 1,             // Optional number of databases (prevents use of CONFIG command).
       'filter'    => 'something:*', // Show only parts of database for speed or security reasons.
       'seperator' => '/',           // Use a different seperator on this database (default uses config default).
       'flush'     => false,         // Set to true to enable the flushdb button for this instance.
@@ -34,7 +38,10 @@ $config = array(
 
 
   'seperator' => ':',
+  'showEmptyNamespaceAsKey' => false,
 
+  // Hide empty databases in the database list (global, valid for all servers unless set at server level)
+  'hideEmptyDBs' => false,
 
   // Uncomment to show less information and make phpRedisAdmin fire less commands to the Redis server. Recommended for a really busy Redis server.
   //'faster' => true,
@@ -51,6 +58,19 @@ $config = array(
       'password' => '',
       'servers'  => array(1) // Optional list of servers this user can access.
     )
+  ),*/
+
+  // Use HTML form/cookie-based auth instead of HTTP Basic/Digest auth
+  'cookie_auth' => false,
+
+
+  /*'serialization' => array(
+    'foo*' => array( // Match like KEYS
+      // Function called when saving to redis.
+      'save' => function($data) { return json_encode(json_decode($data)); },
+      // Function called when loading from redis.
+      'load' => function($data) { return json_encode(json_decode($data), JSON_PRETTY_PRINT); },
+    ),
   ),*/
 
 
@@ -75,5 +95,3 @@ $config = array(
   // How many entries to fetch using each SCAN command.
   'scansize' => 1000
 );
-
-?>

@@ -1,25 +1,18 @@
 <?php
 
 require_once 'includes/common.inc.php';
+global $redis, $config, $csrfToken, $server;
 
-
-
-
-if (isset($_GET['reset']) && method_exists($redis, 'resetStat')) {
-  $redis->resetStat();
+if (isset($_GET['reset'])) {
+  $redis->config('resetstat');
 
   header('Location: info.php');
   die;
 }
 
-
-
 // Fetch the info
 $info = $redis->info();
 $alt  = false;
-
-
-
 
 $page['css'][] = 'frame';
 $page['js'][]  = 'frame';
@@ -29,11 +22,9 @@ require 'includes/header.inc.php';
 ?>
 <h2>Info</h2>
 
-<?php if (method_exists($redis, 'resetStat')) { ?>
 <p>
-<a href="?reset&amp;s=<?php echo $server['id']?>&amp;d=<?php echo $server['db']?>" class="reset">Reset usage statistics</a>
+<a href="?reset=1&amp;s=<?php echo $server['id']?>&amp;d=<?php echo $server['db']?>" class="reset">Reset usage statistics</a>
 </p>
-<?php } ?>
 
 <table>
 <tr><th><div>Key</div></th><th><div>Value</div></th></tr>

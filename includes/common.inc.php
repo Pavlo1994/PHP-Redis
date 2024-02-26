@@ -1,29 +1,26 @@
 <?php
-require dirname(__FILE__) . '/../vendor/autoload.php';
+require __DIR__ . '/../vendor/autoload.php';
 
 define('PHPREDIS_ADMIN_PATH', dirname(__DIR__));
 
-// Undo magic quotes (both in keys and values)
-if (function_exists('get_magic_quotes_gpc') && get_magic_quotes_gpc()) {
-  $process = array(&$_GET, &$_POST);
+if (session_status() !== PHP_SESSION_DISABLED) {
+  session_start();
 
-  while (list($key, $val) = each($process)) {
-    foreach ($val as $k => $v) {
-      unset($process[$key][$k]);
-
-      if (is_array($v)) {
-        $process[$key][stripslashes($k)] = $v;
-        $process[] = &$process[$key][stripslashes($k)];
-      } else {
-        $process[$key][stripslashes($k)] = stripslashes($v);
-      }
-    }
+  if (isset($_SESSION['phpredisadmin_csrf'])) {
+    $csrfToken = $_SESSION['phpredisadmin_csrf'];
+  } else {
+    $csrfToken = bin2hex(random_bytes(16));
+    $_SESSION['phpredisadmin_csrf'] = $csrfToken;
   }
-
-  unset($process);
+} else {
+  $csrfToken = 'nosession';
 }
 
-
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  if ($_POST['csrf'] !== $csrfToken) {
+    die('bad csrf token');
+  }
+}
 
 
 // These includes are needed by each script.
@@ -46,7 +43,6 @@ if (isset($login['servers'])) {
   $i = 0;
 }
 
-
 if (isset($_GET['s']) && is_numeric($_GET['s']) && ($_GET['s'] < count($config['servers']))) {
   $i = $_GET['s'];
 }
@@ -55,9 +51,7 @@ $server            = $config['servers'][$i];
 $server['id']      = $i;
 $server['charset'] = isset($server['charset']) && $server['charset'] ? $server['charset'] : false;
 
-
 mb_internal_encoding('utf-8');
-
 
 if (isset($login, $login['servers'])) {
   if (array_search($i, $login['servers']) === false) {
@@ -111,12 +105,18 @@ if (!isset($server['serialization'])) {
   }
 }
 
+
 // Setup a connection to Redis.
-$redis = !$server['port'] ? new Predis\Client($server['host']) : new Predis\Client('tcp://'.$server['host'].':'.$server['port']);
+if(isset($server['scheme']) && $server['scheme'] === 'unix' && $server['path']) {
+  $redis = new Predis\Client(array('scheme' => 'unix', 'path' => $server['path']));
+} else {
+  $redis = !$server['port'] ? new Predis\Client($server['host']) : new Predis\Client('tcp://'.$server['host'].':'.$server['port']);
+}
+
 try {
     $redis->connect();
 } catch (Predis\CommunicationException $exception) {
-    $redis = false;
+    die('ERROR: ' . $exception->getMessage());
 }
 
 if (isset($server['auth'])) {
@@ -131,5 +131,3 @@ if ($server['db'] != 0) {
     die('ERROR: Selecting database failed ('.$server['host'].':'.$server['port'].','.$server['db'].')');
   }
 }
-
-?>

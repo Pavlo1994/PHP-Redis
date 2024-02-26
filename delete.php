@@ -1,13 +1,13 @@
 <?php
 
-
 if (!isset($_POST['post'])) {
   die('Javascript needs to be enabled for you to delete keys.');
 }
 
-
 require_once 'includes/common.inc.php';
 
+global $redis;
+global $server;
 
 if (isset($_GET['key'])) {
   // String
@@ -60,4 +60,16 @@ if (isset($_GET['tree'])) {
   die('?view&s='.$server['id'].'&d='.$server['db']);
 }
 
-?>
+if (isset($_GET['batch_del'])) {
+  if (empty($_POST['selected_keys'])) {
+    die('No keys to delete');
+  }
+  $keys = json_decode($_POST['selected_keys']);
+
+  foreach ($keys as $key) {
+    $redis->del($key);
+  }
+
+  die('?view&s=' . $server['id'] . '&d=' . $server['db'] . '&key=' . urlencode($keys[0]));
+}
+
